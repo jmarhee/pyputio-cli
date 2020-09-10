@@ -1,8 +1,8 @@
 from bs4 import BeautifulSoup
 import urllib.request
 import urllib.parse
-import os
-import sys
+import sys, os
+import argparse
 import getpass
 from configparser import ConfigParser
 import zipfile
@@ -36,14 +36,17 @@ def readCredentials():
 
 def readConfig():
 	parser = ConfigParser()
-	parser.read(os.environ["%s" % (PUTIO_CONFIG_PATH)])
+	parser.read(os.environ["PUTIO_CONFIG_PATH"])
 	PUTIO_USER = parser.get('putio_config', 'username')
 	PUTIO_PASS = urllib.parse.quote(parser.get('putio_config', 'password'))
-	PUTIO_LIBRARY_PATH = parser.get('putio_config', 'putio_library_path')
-	if os.environ.get('PUTIO_LIBRARY_SUBPATH') is None:
+	if parser.get('putio_config', 'library_path') is None:
+		PUTIO_LIBRARY_PATH = input("Enter the Plex Library root directory (/mnt/Plex) : ")
+	else:
+		PUTIO_LIBRARY_PATH = parser.get('putio_config', 'library_path')
+	if parser.get('putio_config', 'library_subpath') is None:
 		PUTIO_LIBRARY_SUBPATH = input("Enter the Plex sub-Library (TV, Movies, etc.) to download and unpack to: ")
 	else:
-		PUTIO_LIBRARY_SUBPATH = os.environ['PUTIO_LIBRARY_SUBPATH']
+		PUTIO_LIBRARY_SUBPATH = parser.get('putio_config', 'library_subpath')
 	authentication = {}
 	authentication['username'] = PUTIO_USER
 	authentication['password'] = PUTIO_PASS
@@ -91,9 +94,9 @@ def do_download(dLurl,credentials):
 	report['diag'] = download_path
 	return report
 
-def download():
+def download(url):
 	creds = credentials()
-	url = sys.argv[1]
+	# url = sys.argv[1]
 	if "put.io" in url:
 		dl_url = dlUrl(creds,url)
 	else:
@@ -118,9 +121,57 @@ def clean(path):
 	op = os.remove(path)
 	return op 
 
+def env_handle(args,mode):
+	if mode == "set":
+		if args.username is not None:
+			os.environ['PUTIO_USER'] = args.username
+		if args.password is not None:
+			os.environ['PUTIO_PASS'] = args.password
+		if args.library_path is not None:
+			os.environ['PUTIO_LIBRARY_PATH'] = args.library_path
+		if args.library_subpath is not None:
+			os.environ['PUTIO_LIBRARY_SUBPATH'] = args.library_subpath
+		if args.config is not None:
+			os.environ['PUTIO_CONFIG_PATH'] = args.config
+	else:
+		if args.username is not None:
+			os.environ['PUTIO_USER'] = ""
+		if args.password is not None:
+			os.environ['PUTIO_PASS'] = ""
+		if args.library_path is not None:
+			os.environ['PUTIO_LIBRARY_PATH'] = ""
+		if args.library_subpath is not None:
+			os.environ['PUTIO_LIBRARY_SUBPATH'] = ""
+		if args.config is not None:
+			os.environ['PUTIO_CONFIG_PATH'] = ""
+	return args
+
+
 def main():
-	downloader = download()
+	parser = argparse.ArgumentParser()
+	
+	parser.add_argument('-U','--username', 
+    help="Put.io Username")
+	parser.add_argument('-P','--password',  
+    help="Put.io Password")
+	parser.add_argument('-p','--library_path', 
+    help="Target Root Directory (i.e. /mnt/Plex)")
+	parser.add_argument('-s','--library_subpath',  
+    help="Target Root Directory (i.e. TV or Music)")
+	parser.add_argument('-c','--config', 
+    help="Put.io configuration file path")
+	parser.add_argument('-u','--url', 
+    help="Put.io Zip URL", required=True)
+
+	args = parser.parse_args()
+	
+	env_handle(args,"set")
+	
+	downloader = download(args.url)
 	ex = extract(downloader)
+	
+	env_handle(args,"unset")
+	
 	return ex
 
 # if __name__ == "__main__":
