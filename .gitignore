@@ -2,6 +2,7 @@ __pycache__
 pyputio/__pycache__
 test.ini
 pyputio/test.py
+test_lib/
 # Editors
 .vscode/
 .idea/

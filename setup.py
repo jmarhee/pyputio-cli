@@ -1,6 +1,6 @@
 from setuptools import setup
 setup(name='pyputio',
-version='0.1',
+version='0.1.1',
 description='Command Line Client for Put.io download archives',
 url='https://github.com/jmarhee/pyputio-cli',
 author='jmarhee',

@@ -29,13 +29,21 @@ username = your_username
 password = your_password
 library_path = /mnt/Plex
 ```
+and loading this configuration:
 
-and set `PUTIO_LIBRARY_SUBPATH`, or reply when prompted. 
+```bash
+putio --config config.ini --url ""
+```
 
+or, using the command line flags to set these options credentials:
+
+```bash
+putio --username "" --password "" --library_path "/mnt/target" --library_subpath "Music" --url ""
+```
+
+and set `PUTIO_LIBRARY_SUBPATH`, or reply when prompted. If required values are not set using the above, you will be prompted for them. 
 
 You can set `PUTIO_CLEAN` to any value to have it clean up the zip archives after the download attempt.
-
-Otherwise, you will be prompted for this information.
 
 Usage
 ---
