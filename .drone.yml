@@ -1,0 +1,32 @@
+kind: pipeline
+name: default
+
+steps:
+
+  - name: Install
+    image: python
+    environment:
+      PUTIO_USER:
+        from_secret: PUTIO_USER
+      PUTIO_PASS:
+        from_secret: PUTIO_PASS
+      PUTIO_URL:
+        from_secret: PUTIO_URL
+    commands:
+    - pip install -e .
+    - mkdir test_lib
+    - export PUTIO_LIBRARY_PATH=$(pwd)
+    - export PUTIO_LIBRYARY_SUBPATH=test_lib
+    - putio --username $PUTIO_USER --password $PUTIO_PASS --url $URL
+
+  - name: Release to test
+    image: python
+    environment:
+      PYPI_TEST_TOKEN:
+        from_secret: PYPI_TEST_TOKEN
+    commands:
+    - pip install twine
+    - pip install -e .
+    - python setup.py bdist_wheel
+    - echo -e "[testpypi]\n  username = __token__\n  password = $PYPI_TEST_TOKEN" | tee -a ~/.pypirc
+    - python3 -m twine upload --repository testpypi dist/*
