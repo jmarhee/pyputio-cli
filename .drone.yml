@@ -17,7 +17,7 @@ steps:
     - mkdir test_lib
     - export PUTIO_LIBRARY_PATH=$(pwd)
     - export PUTIO_LIBRYARY_SUBPATH=test_lib
-    - putio --username $PUTIO_USER --password $PUTIO_PASS --url $URL
+    - putio --username $PUTIO_USER --password $PUTIO_PASS --url $PUTIO_URL
 
   - name: Release to test
     image: python
