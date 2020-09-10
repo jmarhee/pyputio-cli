@@ -15,18 +15,5 @@ steps:
     commands:
     - pip install -e .
     - mkdir test_lib
-    - export PUTIO_LIBRARY_PATH=$(pwd)
-    - export PUTIO_LIBRYARY_SUBPATH=test_lib
-    - putio --username $PUTIO_USER --password $PUTIO_PASS --url $URL
+    - putio --username $PUTIO_USER --password $PUTIO_PASS --url $PUTIO_URL --library_path $(pwd) --library_subpath test_lib || ls test_lib
 
-  - name: Release to test
-    image: python
-    environment:
-      PYPI_TEST_TOKEN:
-        from_secret: PYPI_TEST_TOKEN
-    commands:
-    - pip install twine
-    - pip install -e .
-    - python setup.py bdist_wheel
-    - echo -e "[testpypi]\n  username = __token__\n  password = $PYPI_TEST_TOKEN" | tee -a ~/.pypirc
-    - python3 -m twine upload --repository testpypi dist/*
