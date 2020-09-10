@@ -26,5 +26,5 @@ steps:
     - pip install twine
     - pip install -e .
     - python setup.py bdist_wheel
-    - echo -e "[testpypi]\n  username = __token__\n  password = $PYPI_TEST_TOKEN" | tee -a ~/.pypirc
+    - echo "[testpypi]\n  username = __token__\n  password = $PYPI_TEST_TOKEN" | tee -a ~/.pypirc
     - python3 -m twine upload --repository testpypi dist/*
