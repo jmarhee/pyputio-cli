@@ -6,6 +6,17 @@ import getpass
 from configparser import ConfigParser
 import zipfile
 
+def readSubpaths(library_path):
+	paths = []
+	for root, dirs, files in os.walk(library_path):
+		for dir in dirs:
+			if dir.startswith("."):
+				continue
+			else:
+				paths.append(dir)
+		break
+	return paths
+
 def readCredentials():
 	if os.environ.get('PUTIO_USER') is None:
 		PUTIO_USER = input("Enter your Put.io Username: ")
@@ -23,7 +34,8 @@ def readCredentials():
 		PUTIO_LIBRARY_PATH = os.environ['PUTIO_LIBRARY_PATH']
 
 	if os.environ.get('PUTIO_LIBRARY_SUBPATH') is None:
-		PUTIO_LIBRARY_SUBPATH = input("Enter the Plex sub-Library (TV, Movies, etc.) to download and unpack to: ")
+		subpaths = readSubpaths(PUTIO_LIBRARY_PATH)
+		PUTIO_LIBRARY_SUBPATH = input("Enter the Plex sub-Library %s to download and unpack to: " % (subpaths))
 	else:
 		PUTIO_LIBRARY_SUBPATH = os.environ['PUTIO_LIBRARY_SUBPATH']
 	authentication = {}
@@ -38,12 +50,13 @@ def readConfig():
 	parser.read(os.environ["PUTIO_CONFIG_PATH"])
 	PUTIO_USER = parser.get('putio_config', 'username')
 	PUTIO_PASS = urllib.parse.quote(parser.get('putio_config', 'password'))
-	if parser.get('putio_config', 'library_path') is None:
+	if parser.has_option('putio_config', 'library_path') is False:
 		PUTIO_LIBRARY_PATH = input("Enter the Plex Library root directory (/mnt/Plex) : ")
 	else:
 		PUTIO_LIBRARY_PATH = parser.get('putio_config', 'library_path')
-	if parser.get('putio_config', 'library_subpath') is None:
-		PUTIO_LIBRARY_SUBPATH = input("Enter the Plex sub-Library (TV, Movies, etc.) to download and unpack to: ")
+	if parser.has_option('putio_config', 'library_subpath') is False:
+		subpaths = readSubpaths(PUTIO_LIBRARY_PATH)
+		PUTIO_LIBRARY_SUBPATH = input("Enter the Plex sub-Library %s to download and unpack to: " % (subpaths))
 	else:
 		PUTIO_LIBRARY_SUBPATH = parser.get('putio_config', 'library_subpath')
 	authentication = {}
