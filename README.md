@@ -1,7 +1,7 @@
 Put.io Command Line Client
 =
 
-[![Build Status](https://cloud.drone.io/api/badges/jmarhee/pyputio-cli/status.svg)](https://cloud.drone.io/jmarhee/pyputio-cli)
+[![Build status](https://ci-central.openfunction.co/api/projects/status/p6kqvkte9o2m6qab?svg=true)](https://ci-central.openfunction.co/project/AppVeyor/pyputio-cli)
 [![PyPI version](https://badge.fury.io/py/pyputio.svg)](https://badge.fury.io/py/pyputio)
 
 This package installs the `putio` command-line client.
