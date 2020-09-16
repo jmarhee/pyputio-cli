@@ -1,8 +1,12 @@
 build_cloud: Docker
 image: Linux
 
+deps:
+    - apt update
+    - apt install python3 python3-pip
+
 install:
-    - pip install -e .
+    - pip3 install -e .
 
 test_script:
     - mkdir test_lib
