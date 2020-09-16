@@ -1,4 +1,4 @@
-image: Python
+image: Ubuntu
 
 install:
     - pip install -e .
