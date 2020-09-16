@@ -1,4 +1,5 @@
-image: Ubuntu
+build_cloud: li965-234 Docker
+image: Ubuntu-Builder
 
 install:
     - pip install -e .
