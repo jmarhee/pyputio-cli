@@ -1,0 +1,10 @@
+image: Python 3.7.10
+
+install:
+    - pip install -e .
+
+test_script:
+    - mkdir test_lib
+    - putio --username $PUTIO_USER --password $PUTIO_PASS --url $PUTIO_URL --library_path $(pwd) --library_subpath test_lib || ls test_lib
+
+build: off
