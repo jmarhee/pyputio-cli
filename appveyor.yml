@@ -1,4 +1,4 @@
-build_cloud: li965-234 
+build_cloud: Docker
 image: Linux
 
 install:
