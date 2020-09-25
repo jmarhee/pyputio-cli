@@ -120,13 +120,27 @@ def download(url):
 def extract(downloader):
 	path_to_zip_file = downloader['full_path']
 	directory_to_extract_to = downloader['library_extract_path']
-	with zipfile.ZipFile(path_to_zip_file, 'r') as zip_ref:
-	    zip_ref.extractall(directory_to_extract_to)
+	# with zipfile.ZipFile(path_to_zip_file, 'r') as zip_ref:
+	# 	zip_ref.extractall(directory_to_extract_to)
+	zf = zipfile.ZipFile(path_to_zip_file, 'r')
+	uncompress_size = sum((file.file_size for file in zf.infolist()))
+
+	extracted_size = 0
+
+	for file in zf.infolist():
+	    extracted_size += file.file_size
+	    prog = "%s %%" % (extracted_size * 100/uncompress_size)
+	    zf.extractall(directory_to_extract_to)
+
 	if os.environ.get("PUTIO_CLEAN") is not None:
 		clean(path_to_zip_file)
 	report = {}
 	report['archive'] = path_to_zip_file
 	report['unpacked_to'] = downloader['library_extract_path']
+	if prog == "100.0 %":
+		report['progress'] = "Completed"
+	else:
+		report['progress'] = "May have errors, or be incomplete (%s)." % (prog)
 	return report
 
 def clean(path):
