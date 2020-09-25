@@ -1,14 +1,15 @@
 dist:
-	rm -rf dist/ ; python setup.py bdist_wheel
+	rm -rf dist/ ; python3 setup.py bdist_wheel --universal
 
+.SILENT:
 tag-release:
-	git tag -a $(TAG) -m "Releasing $(TAG)" ; git push origin $(TAG)
+	if [[ $(TAG) == v?.?.? ]]; then echo "Tagging $(TAG)"; else echo "Bad Tag Format: $(TAG)"; exit 1; fi && git tag -a $(TAG) -m "Releasing $(TAG)" ; read -p "Push tag: $(TAG)? " push_tag ; if ["$push_tag"=="yes"]; then git push origin $(TAG); fi
 
 push-test:
-	python3 -m twine upload --repository testpypi dist/*	
+	make dist; python3 -m twine upload --repository testpypi dist/*	
 
 push:
-	python3 -m twine upload dist/*
+	make dist; python3 -m twine upload dist/*
 
 install:
 	pip3 install -e .
