@@ -5,6 +5,11 @@ import argparse
 import getpass
 from configparser import ConfigParser
 import zipfile
+from pkg_resources import get_distribution, DistributionNotFound
+
+def versionInfo():
+    dist = get_distribution('pyputio')
+    return "pyputio %s" % (dist.version)
 
 def readSubpaths(library_path):
 	paths = []
@@ -187,18 +192,23 @@ def main():
 	parser.add_argument('-c','--config', 
     help="Put.io configuration file path")
 	parser.add_argument('-u','--url', 
-    help="Put.io Zip URL", required=True)
+    help="Put.io Zip URL")
+	parser.add_argument('-v', '--version', 
+    help="pyputio version", action='store_true')
 
 	args = parser.parse_args()
+
+	if args.url is not None:
+		env_handle(args,"set")
+		
+		downloader = download(args.url)
+		ex = extract(downloader)
+		
+		env_handle(args,"unset")
 	
-	env_handle(args,"set")
-	
-	downloader = download(args.url)
-	ex = extract(downloader)
-	
-	env_handle(args,"unset")
-	
-	return ex
+		return ex
+	else:
+		return versionInfo()
 
 # if __name__ == "__main__":
 #     exit(main())
