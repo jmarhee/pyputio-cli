@@ -6,6 +6,8 @@ import getpass
 from configparser import ConfigParser
 import zipfile
 import progressbar
+import time
+import random
 from pkg_resources import get_distribution, DistributionNotFound
 
 class DlProgressBar():
@@ -37,6 +39,10 @@ def readSubpaths(library_path):
 				paths.append(dir)
 		break
 	return paths
+
+def current_time():
+	current = time.time()
+	return current
 
 def readCredentials():
 	if os.environ.get('PUTIO_USER') is None:
@@ -120,8 +126,12 @@ def do_download(dLurl,credentials):
 	handler = urllib.request.HTTPBasicAuthHandler(password_mgr)
 	opener = urllib.request.build_opener(handler)
 	print("Downloading...")
+	start_time = current_time()
 	download_path = urllib.request.urlretrieve(dLurl['raw_url'], "%s/%s%s" % (credentials['library_path'], credentials['library_subpath'], dLurl['file_name']), DlProgressBar())
+	end_time = current_time()
 	report = {}
+	if os.environ['PUTIO_REPORT_TIME'] is not None:
+		report['download_time'] = end_time - start_time, " seconds."
 	report['full_path'] = dLurl['end_path']
 	report['library_extract_path'] = "%s/%s" % (credentials['library_path'], credentials['library_subpath'])
 	report['url'] = dLurl['end_url']
@@ -142,34 +152,44 @@ def download(url):
 def extract(downloader):
 	path_to_zip_file = downloader['full_path']
 	directory_to_extract_to = downloader['library_extract_path']
-	# with zipfile.ZipFile(path_to_zip_file, 'r') as zip_ref:
-	# 	zip_ref.extractall(directory_to_extract_to)
-	zf = zipfile.ZipFile(path_to_zip_file, 'r')
-	uncompress_size = sum((file.file_size for file in zf.infolist()))
+	with zipfile.ZipFile(path_to_zip_file, 'r') as zip_ref:
+		start_time = current_time()
+		print("Extracting %s...\n" % (path_to_zip_file))
+		zip_ref.extractall(directory_to_extract_to)
+		end_time = current_time()
+		if os.environ['PUTIO_REPORT_TIME'] is not None:
+			extract_time = end_time - start_time, " seconds."
+#	zf = zipfile.ZipFile(path_to_zip_file, 'r')
+#	uncompress_size = sum((file.file_size for file in zf.infolist()))
 
-	extracted_size = 0
+#	extracted_size = 0
 
-	files_extracted = []
+#	files_extracted = []
 
-	for file in zf.infolist():
-		print("Extracting '%s'..." % (file.filename))
-		extracted_size += file.file_size
-		prog = "%s %%" % (extracted_size * 100/uncompress_size)
-		print("File: '%s': %s\n" % (file.filename, prog))
-		zf.extractall(directory_to_extract_to)
-		files_extracted.append(file.filename)
+#	for file in zf.infolist():
+#		print("Extracting '%s'..." % (file.filename))
+#		extracted_size += file.file_size
+#		prog = "%s %%" % (extracted_size * 100/uncompress_size)
+#		print("File: '%s': %s\n" % (file.filename, prog))
+#		zf.extractall(directory_to_extract_to)
+#		files_extracted.append(file.filename)
 
 	if os.environ.get("PUTIO_CLEAN") is not None:
 		clean(path_to_zip_file)
 	report = {}
+	if extract_time:
+		report['extract_time'] = extract_time
+	if "download_time" in downloader:
+		if os.environ['PUTIO_REPORT_TIME'] is not None:
+                        report['download_time'] = downloader['download_time']
 	report['archive'] = path_to_zip_file
 	report['unpacked_to'] = downloader['library_extract_path']
 #	if prog == "100.0 %":
 #		report['progress'] = "Completed"
 #	else:
 #		report['progress'] = "May have errors, or be incomplete (%s)." % (prog)
-	if os.environ.get("PUTIO_REPORT_VERBOSE") is not None:
-		report['files'] = files_extracted
+#	if os.environ.get("PUTIO_REPORT_VERBOSE") is not None:
+#		report['files'] = files_extracted
 	return report
 
 def clean(path):
