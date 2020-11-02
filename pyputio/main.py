@@ -155,7 +155,7 @@ def extract(downloader):
 		print("Extracting '%s'..." % (file.filename))
 		extracted_size += file.file_size
 		prog = "%s %%" % (extracted_size * 100/uncompress_size)
-		print("File: '%s': %s" % (file.filename, prog))
+		print("File: '%s': %s\n" % (file.filename, prog))
 		zf.extractall(directory_to_extract_to)
 		files_extracted.append(file.filename)
 
@@ -164,11 +164,12 @@ def extract(downloader):
 	report = {}
 	report['archive'] = path_to_zip_file
 	report['unpacked_to'] = downloader['library_extract_path']
-	if prog == "100.0 %":
-		report['progress'] = "Completed"
-	else:
-		report['progress'] = "May have errors, or be incomplete (%s)." % (prog)
-	report['files'] = files_extracted
+#	if prog == "100.0 %":
+#		report['progress'] = "Completed"
+#	else:
+#		report['progress'] = "May have errors, or be incomplete (%s)." % (prog)
+	if os.environ.get("PUTIO_REPORT_VERBOSE") is not None:
+		report['files'] = files_extracted
 	return report
 
 def clean(path):
