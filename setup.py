@@ -1,6 +1,6 @@
 from setuptools import setup
 setup(name='pyputio',
-version='0.1.11',
+version='0.1.12',
 description='Command Line Client for Put.io download zip archives',
 url='https://git-central.openfunction.co/jmarhee/pyputio-cli',
 author='jmarhee',
@@ -12,5 +12,6 @@ entry_points = {
 	'console_scripts': ['putio=pyputio.main:main']
 },
 install_requires=[
+	"progressbar"
 ],
 zip_safe=False)

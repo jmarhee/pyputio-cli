@@ -5,7 +5,23 @@ import argparse
 import getpass
 from configparser import ConfigParser
 import zipfile
+import progressbar
 from pkg_resources import get_distribution, DistributionNotFound
+
+class DlProgressBar():
+    def __init__(self):
+        self.pbar = None
+
+    def __call__(self, block_num, block_size, total_size):
+        if not self.pbar:
+            self.pbar=progressbar.ProgressBar(maxval=total_size)
+            self.pbar.start()
+
+        downloaded = block_num * block_size
+        if downloaded < total_size:
+            self.pbar.update(downloaded)
+        else:
+            self.pbar.finish()
 
 def versionInfo():
     dist = get_distribution('pyputio')
@@ -103,7 +119,8 @@ def do_download(dLurl,credentials):
 	password_mgr.add_password(None, top_level_url, credentials['username'], credentials['password'])
 	handler = urllib.request.HTTPBasicAuthHandler(password_mgr)
 	opener = urllib.request.build_opener(handler)
-	download_path = urllib.request.urlretrieve(dLurl['raw_url'], "%s/%s%s" % (credentials['library_path'], credentials['library_subpath'], dLurl['file_name']))
+	print("Downloading...")
+	download_path = urllib.request.urlretrieve(dLurl['raw_url'], "%s/%s%s" % (credentials['library_path'], credentials['library_subpath'], dLurl['file_name']), DlProgressBar())
 	report = {}
 	report['full_path'] = dLurl['end_path']
 	report['library_extract_path'] = "%s/%s" % (credentials['library_path'], credentials['library_subpath'])
