@@ -130,7 +130,7 @@ def do_download(dLurl,credentials):
 	download_path = urllib.request.urlretrieve(dLurl['raw_url'], "%s/%s%s" % (credentials['library_path'], credentials['library_subpath'], dLurl['file_name']), DlProgressBar())
 	end_time = current_time()
 	report = {}
-	if os.environ['PUTIO_REPORT_TIME'] is not None:
+	if os.environ.get('PUTIO_REPORT_TIME') is not None:
 		report['download_time'] = end_time - start_time, " seconds."
 	report['full_path'] = dLurl['end_path']
 	report['library_extract_path'] = "%s/%s" % (credentials['library_path'], credentials['library_subpath'])
@@ -152,13 +152,14 @@ def download(url):
 def extract(downloader):
 	path_to_zip_file = downloader['full_path']
 	directory_to_extract_to = downloader['library_extract_path']
+	report = {}
 	with zipfile.ZipFile(path_to_zip_file, 'r') as zip_ref:
 		start_time = current_time()
 		print("Extracting %s...\n" % (path_to_zip_file))
 		zip_ref.extractall(directory_to_extract_to)
 		end_time = current_time()
-		if os.environ['PUTIO_REPORT_TIME'] is not None:
-			extract_time = end_time - start_time, " seconds."
+		if os.environ.get('PUTIO_REPORT_TIME') is not None:
+			report['extract_time'] = end_time - start_time, " seconds."
 #	zf = zipfile.ZipFile(path_to_zip_file, 'r')
 #	uncompress_size = sum((file.file_size for file in zf.infolist()))
 
@@ -176,9 +177,6 @@ def extract(downloader):
 
 	if os.environ.get("PUTIO_CLEAN") is not None:
 		clean(path_to_zip_file)
-	report = {}
-	if extract_time:
-		report['extract_time'] = extract_time
 	if "download_time" in downloader:
 		if os.environ['PUTIO_REPORT_TIME'] is not None:
                         report['download_time'] = downloader['download_time']
