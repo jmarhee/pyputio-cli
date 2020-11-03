@@ -159,21 +159,7 @@ def extract(downloader):
 		zip_ref.extractall(directory_to_extract_to)
 		end_time = current_time()
 		if os.environ.get('PUTIO_REPORT_TIME') is not None:
-			report['extract_time'] = end_time - start_time, " seconds."
-#	zf = zipfile.ZipFile(path_to_zip_file, 'r')
-#	uncompress_size = sum((file.file_size for file in zf.infolist()))
-
-#	extracted_size = 0
-
-#	files_extracted = []
-
-#	for file in zf.infolist():
-#		print("Extracting '%s'..." % (file.filename))
-#		extracted_size += file.file_size
-#		prog = "%s %%" % (extracted_size * 100/uncompress_size)
-#		print("File: '%s': %s\n" % (file.filename, prog))
-#		zf.extractall(directory_to_extract_to)
-#		files_extracted.append(file.filename)
+			report['extract_time'] = end_time - start_time, "seconds."
 
 	if os.environ.get("PUTIO_CLEAN") is not None:
 		clean(path_to_zip_file)
@@ -182,12 +168,25 @@ def extract(downloader):
                         report['download_time'] = downloader['download_time']
 	report['archive'] = path_to_zip_file
 	report['unpacked_to'] = downloader['library_extract_path']
-#	if prog == "100.0 %":
-#		report['progress'] = "Completed"
-#	else:
-#		report['progress'] = "May have errors, or be incomplete (%s)." % (prog)
-#	if os.environ.get("PUTIO_REPORT_VERBOSE") is not None:
-#		report['files'] = files_extracted
+	return report
+
+def manual_extract(downloader):
+	path_to_zip_file = downloader['full_path']
+	directory_to_extract_to = downloader['library_extract_path']
+	report = {}
+	start_time = current_time()
+	extract = os.system("cd %s && unzip %s" % (directory_to_extract_to, path_to_zip_file))
+	end_time = current_time()
+	print(extract)
+	if os.environ.get('PUTIO_REPORT_TIME') is not None:
+		report['extract_time'] = end_time - start_time, "seconds."
+	if os.environ.get("PUTIO_CLEAN") is not None:
+		clean(path_to_zip_file)
+	if "download_time" in downloader:
+		if os.environ['PUTIO_REPORT_TIME'] is not None:
+			report['download_time'] = downloader['download_time']
+	report['archive'] = path_to_zip_file
+	report['unpacked_to'] = downloader['library_extract_path']
 	return report
 
 def clean(path):
@@ -244,8 +243,10 @@ def main():
 		env_handle(args,"set")
 		
 		downloader = download(args.url)
-		ex = extract(downloader)
-		
+		if os.environ.get('PUTIO_MANUAL') is not None:
+			ex = manual_extract(downloader)
+		else:
+			ex = extract(downloader)
 		env_handle(args,"unset")
 	
 		return ex
