@@ -138,6 +138,20 @@ def do_download(dLurl,credentials):
 	report['diag'] = download_path
 	return report
 
+def manual_do_download(dLurl,credentials):
+	print("Downloading...")
+	start_time = current_time()
+	download_path = os.system("wget --user '%s' --password '%s' '%s' -O %s" % (credentials['username'], credentials['password'], dLurl['raw_url'], dLurl['end_path']))
+	end_time = current_time()
+	report = {}
+	if os.environ.get('PUTIO_REPORT_TIME') is not None:
+		report['download_time'] = end_time - start_time, " seconds."
+	report['full_path'] = dLurl['end_path']
+	report['library_extract_path'] = "%s/%s" % (credentials['library_path'], credentials['library_subpath'])
+	report['url'] = dLurl['end_url']
+	report['diag'] = download_path
+	return report
+
 def download(url):
 	creds = credentials()
 	# url = sys.argv[1]
@@ -146,7 +160,10 @@ def download(url):
 	else:
 		return "Bad URL"
 		exit(1)
-	downloader = do_download(dl_url,creds)
+	if os.environ.get('PUTIO_MANUAL_DL') is not None:
+		downloader = manual_do_download(dl_url,creds)
+	else:
+		downloader = do_download(dl_url,creds)
 	return downloader
 
 def extract(downloader):
