@@ -131,7 +131,8 @@ def do_download(dLurl,credentials):
 	end_time = current_time()
 	report = {}
 	if os.environ.get('PUTIO_REPORT_TIME') is not None:
-		report['download_time'] = end_time - start_time, " seconds."
+		timed = end_time - start_time, " seconds."
+		report['download_time'] = "%s seconds." % (str(round(timed[0], 2)))
 	report['full_path'] = dLurl['end_path']
 	report['library_extract_path'] = "%s/%s" % (credentials['library_path'], credentials['library_subpath'])
 	report['url'] = dLurl['end_url']
@@ -145,7 +146,8 @@ def manual_do_download(dLurl,credentials):
 	end_time = current_time()
 	report = {}
 	if os.environ.get('PUTIO_REPORT_TIME') is not None:
-		report['download_time'] = end_time - start_time, " seconds."
+		timed = end_time - start_time, " seconds."
+		report['download_time'] = "%s seconds." % (str(round(timed[0], 2)))
 	report['full_path'] = dLurl['end_path']
 	report['library_extract_path'] = "%s/%s" % (credentials['library_path'], credentials['library_subpath'])
 	report['url'] = dLurl['end_url']
@@ -176,7 +178,8 @@ def extract(downloader):
 		zip_ref.extractall(directory_to_extract_to)
 		end_time = current_time()
 		if os.environ.get('PUTIO_REPORT_TIME') is not None:
-			report['extract_time'] = end_time - start_time, "seconds."
+			timed = end_time - start_time, " seconds."
+			report['extract_time'] = "%s seconds." % (str(round(timed[0], 2)))
 
 	if os.environ.get("PUTIO_CLEAN") is not None:
 		clean(path_to_zip_file)
@@ -196,7 +199,8 @@ def manual_extract(downloader):
 	end_time = current_time()
 	print(extract)
 	if os.environ.get('PUTIO_REPORT_TIME') is not None:
-		report['extract_time'] = end_time - start_time, "seconds."
+		timed = end_time - start_time, " seconds."
+		report['download_time'] = "%s seconds." % (str(round(timed[0], 2)))
 	if os.environ.get("PUTIO_CLEAN") is not None:
 		clean(path_to_zip_file)
 	if "download_time" in downloader:
