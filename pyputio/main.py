@@ -6,6 +6,8 @@ import getpass
 from configparser import ConfigParser
 import zipfile
 import progressbar
+import time
+import random
 from pkg_resources import get_distribution, DistributionNotFound
 
 class DlProgressBar():
@@ -37,6 +39,10 @@ def readSubpaths(library_path):
 				paths.append(dir)
 		break
 	return paths
+
+def current_time():
+	current = time.time()
+	return current
 
 def readCredentials():
 	if os.environ.get('PUTIO_USER') is None:
@@ -120,8 +126,28 @@ def do_download(dLurl,credentials):
 	handler = urllib.request.HTTPBasicAuthHandler(password_mgr)
 	opener = urllib.request.build_opener(handler)
 	print("Downloading...")
+	start_time = current_time()
 	download_path = urllib.request.urlretrieve(dLurl['raw_url'], "%s/%s%s" % (credentials['library_path'], credentials['library_subpath'], dLurl['file_name']), DlProgressBar())
+	end_time = current_time()
 	report = {}
+	if os.environ.get('PUTIO_REPORT_TIME') is not None:
+		timed = end_time - start_time, " seconds."
+		report['download_time'] = "%s seconds." % (str(round(timed[0], 2)))
+	report['full_path'] = dLurl['end_path']
+	report['library_extract_path'] = "%s/%s" % (credentials['library_path'], credentials['library_subpath'])
+	report['url'] = dLurl['end_url']
+	report['diag'] = download_path
+	return report
+
+def manual_do_download(dLurl,credentials):
+	print("Downloading...")
+	start_time = current_time()
+	download_path = os.system("wget --user '%s' --password '%s' '%s' -O %s" % (credentials['username'], credentials['password'], dLurl['raw_url'], dLurl['end_path']))
+	end_time = current_time()
+	report = {}
+	if os.environ.get('PUTIO_REPORT_TIME') is not None:
+		timed = end_time - start_time, " seconds."
+		report['download_time'] = "%s seconds." % (str(round(timed[0], 2)))
 	report['full_path'] = dLurl['end_path']
 	report['library_extract_path'] = "%s/%s" % (credentials['library_path'], credentials['library_subpath'])
 	report['url'] = dLurl['end_url']
@@ -136,39 +162,52 @@ def download(url):
 	else:
 		return "Bad URL"
 		exit(1)
-	downloader = do_download(dl_url,creds)
+	if os.environ.get('PUTIO_MANUAL_DL') is not None:
+		downloader = manual_do_download(dl_url,creds)
+	else:
+		downloader = do_download(dl_url,creds)
 	return downloader
 
 def extract(downloader):
 	path_to_zip_file = downloader['full_path']
 	directory_to_extract_to = downloader['library_extract_path']
-	# with zipfile.ZipFile(path_to_zip_file, 'r') as zip_ref:
-	# 	zip_ref.extractall(directory_to_extract_to)
-	zf = zipfile.ZipFile(path_to_zip_file, 'r')
-	uncompress_size = sum((file.file_size for file in zf.infolist()))
-
-	extracted_size = 0
-
-	files_extracted = []
-
-	for file in zf.infolist():
-		print("Extracting '%s'..." % (file.filename))
-		extracted_size += file.file_size
-		prog = "%s %%" % (extracted_size * 100/uncompress_size)
-		print("File: '%s': %s" % (file.filename, prog))
-		zf.extractall(directory_to_extract_to)
-		files_extracted.append(file.filename)
+	report = {}
+	with zipfile.ZipFile(path_to_zip_file, 'r') as zip_ref:
+		start_time = current_time()
+		print("Extracting %s...\n" % (path_to_zip_file))
+		zip_ref.extractall(directory_to_extract_to)
+		end_time = current_time()
+		if os.environ.get('PUTIO_REPORT_TIME') is not None:
+			timed = end_time - start_time, " seconds."
+			report['extract_time'] = "%s seconds." % (str(round(timed[0], 2)))
 
 	if os.environ.get("PUTIO_CLEAN") is not None:
 		clean(path_to_zip_file)
-	report = {}
+	if "download_time" in downloader:
+		if os.environ['PUTIO_REPORT_TIME'] is not None:
+                        report['download_time'] = downloader['download_time']
 	report['archive'] = path_to_zip_file
 	report['unpacked_to'] = downloader['library_extract_path']
-	if prog == "100.0 %":
-		report['progress'] = "Completed"
-	else:
-		report['progress'] = "May have errors, or be incomplete (%s)." % (prog)
-	report['files'] = files_extracted
+	return report
+
+def manual_extract(downloader):
+	path_to_zip_file = downloader['full_path']
+	directory_to_extract_to = downloader['library_extract_path']
+	report = {}
+	start_time = current_time()
+	extract = os.system("cd %s && unzip %s" % (directory_to_extract_to, path_to_zip_file))
+	end_time = current_time()
+	print(extract)
+	if os.environ.get('PUTIO_REPORT_TIME') is not None:
+		timed = end_time - start_time, " seconds."
+		report['download_time'] = "%s seconds." % (str(round(timed[0], 2)))
+	if os.environ.get("PUTIO_CLEAN") is not None:
+		clean(path_to_zip_file)
+	if "download_time" in downloader:
+		if os.environ['PUTIO_REPORT_TIME'] is not None:
+			report['download_time'] = downloader['download_time']
+	report['archive'] = path_to_zip_file
+	report['unpacked_to'] = downloader['library_extract_path']
 	return report
 
 def clean(path):
@@ -225,8 +264,10 @@ def main():
 		env_handle(args,"set")
 		
 		downloader = download(args.url)
-		ex = extract(downloader)
-		
+		if os.environ.get('PUTIO_MANUAL') is not None:
+			ex = manual_extract(downloader)
+		else:
+			ex = extract(downloader)
 		env_handle(args,"unset")
 	
 		return ex
