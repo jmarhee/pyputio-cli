@@ -6,6 +6,7 @@ import getpass
 from configparser import ConfigParser
 import zipfile
 import progressbar
+import requests
 import time
 import random
 from pkg_resources import get_distribution, DistributionNotFound
@@ -65,6 +66,7 @@ def readCredentials():
 		PUTIO_LIBRARY_SUBPATH = input("Enter the Plex sub-Library %s to download and unpack to: " % (subpaths))
 	else:
 		PUTIO_LIBRARY_SUBPATH = os.environ['PUTIO_LIBRARY_SUBPATH']
+
 	authentication = {}
 	authentication['username'] = PUTIO_USER
 	authentication['password'] = PUTIO_PASS
@@ -137,6 +139,13 @@ def do_download(dLurl,credentials):
 	report['library_extract_path'] = "%s/%s" % (credentials['library_path'], credentials['library_subpath'])
 	report['url'] = dLurl['end_url']
 	report['diag'] = download_path
+	if os.environ.get('PUTIO_NOTIFY') is not None:
+		if os.environ.get('PUSHOVER_USER') is None and os.environ.get('PUSHOVER_TOKEN') is None:
+			print("[WARN] Ensure PUSHOVER_TOKEN and PUSHOVER_USER are set in environment.")
+		else:
+			notification_data = "token=%s&user=%s&device=putio-cli&message=%s" % (os.environ['PUSHOVER_TOKEN'], os.environ['PUSHOVER_USER'], report['url'])
+			headers = {"Content-type": "application/x-www-form-urlencoded"}
+			notification = requests.post("https://api.pushover.net/1/messages.json", headers=headers, data=notification_data)
 	return report
 
 def manual_do_download(dLurl,credentials):
@@ -226,6 +235,8 @@ def env_handle(args,mode):
 			os.environ['PUTIO_LIBRARY_SUBPATH'] = args.library_subpath
 		if args.config is not None:
 			os.environ['PUTIO_CONFIG_PATH'] = args.config
+		if args.notify is not None:
+			os.environ['PUTIO_NOTIFY'] = args.notify
 	else:
 		if args.username is not None:
 			os.environ['PUTIO_USER'] = ""
@@ -237,6 +248,8 @@ def env_handle(args,mode):
 			os.environ['PUTIO_LIBRARY_SUBPATH'] = ""
 		if args.config is not None:
 			os.environ['PUTIO_CONFIG_PATH'] = ""
+		if args.notify is not None:
+			os.environ['PUTIO_NOTIFY'] = ""
 	return args
 
 
@@ -255,6 +268,8 @@ def main():
     help="Put.io configuration file path")
 	parser.add_argument('-u','--url', 
     help="Put.io Zip URL")
+	parser.add_argument('-n','--notify',
+	help="Notification via Pushover (Assumes PUSHOVER_USER and PUSHOVER_TOKEN in env)")
 	parser.add_argument('-v', '--version', 
     help="pyputio version", action='store_true')
 
