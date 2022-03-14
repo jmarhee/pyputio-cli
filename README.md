@@ -60,3 +60,12 @@ putio "URL"
 using the "Zip and Download" option on the Put.io UI. 
 
 If you wish to delete the zip archive after unarchiving is completed, set `PUTIO_CLEAN` to any value.
+
+Options
+---
+
+Output format can be controlled using, either, the `-o` flag, or the `PUTIO_OUTPUT_MODE` environment variable, set to either default, `json` (which returns only a json object about the completed job), `progress` (which returns only the download progress), and `silent` (no output).
+
+If you use [pushover](pushover.net), set `PUSHOVER_TOKEN` and `PUSHOVER_USER` in your environment, and to have completed jobs send a notification, set `--notify` to any value, or `PUTIO_NOTIFY` to any value. 
+
+To remove archives after download and extraction, set `PUTIO_CLEAN` to 1. 
