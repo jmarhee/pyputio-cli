@@ -16,15 +16,18 @@ class DlProgressBar():
         self.pbar = None
 
     def __call__(self, block_num, block_size, total_size):
-        if not self.pbar:
-            self.pbar=progressbar.ProgressBar(maxval=total_size)
-            self.pbar.start()
+    	if os.environ.get("PUTIO_OUTPUT_MODE") == "silent" or os.environ.get("PUTIO_OUTPUT_MODE") == "json":
+    		self.pbar = None
+    	else:
+	        if not self.pbar:
+	            self.pbar=progressbar.ProgressBar(maxval=total_size)
+	            self.pbar.start()
 
-        downloaded = block_num * block_size
-        if downloaded < total_size:
-            self.pbar.update(downloaded)
-        else:
-            self.pbar.finish()
+	        downloaded = block_num * block_size
+	        if downloaded < total_size:
+	            self.pbar.update(downloaded)
+	        else:
+	            self.pbar.finish()
 
 def versionInfo():
     dist = get_distribution('pyputio')
@@ -127,7 +130,6 @@ def do_download(dLurl,credentials):
 	password_mgr.add_password(None, top_level_url, credentials['username'], credentials['password'])
 	handler = urllib.request.HTTPBasicAuthHandler(password_mgr)
 	opener = urllib.request.build_opener(handler)
-	print("Downloading...")
 	start_time = current_time()
 	download_path = urllib.request.urlretrieve(dLurl['raw_url'], "%s/%s%s" % (credentials['library_path'], credentials['library_subpath'], dLurl['file_name']), DlProgressBar())
 	end_time = current_time()
@@ -143,7 +145,7 @@ def do_download(dLurl,credentials):
 		if os.environ.get('PUSHOVER_USER') is None and os.environ.get('PUSHOVER_TOKEN') is None:
 			print("[WARN] Ensure PUSHOVER_TOKEN and PUSHOVER_USER are set in environment.")
 		else:
-			notification_data = "token=%s&user=%s&device=putio-cli&message=%s" % (os.environ['PUSHOVER_TOKEN'], os.environ['PUSHOVER_USER'], report['url'])
+			notification_data = "token=%s&user=%s&device=putio-cli&message=%s" % (os.environ['PUSHOVER_TOKEN'], os.environ['PUSHOVER_USER'], report['full_path'])
 			headers = {"Content-type": "application/x-www-form-urlencoded"}
 			notification = requests.post("https://api.pushover.net/1/messages.json", headers=headers, data=notification_data)
 	return report
@@ -183,7 +185,10 @@ def extract(downloader):
 	report = {}
 	with zipfile.ZipFile(path_to_zip_file, 'r') as zip_ref:
 		start_time = current_time()
-		print("Extracting %s...\n" % (path_to_zip_file))
+		if os.environ.get("PUTIO_OUTPUT_MODE") == "silent" or os.environ.get("PUTIO_OUTPUT_MODE") == "progress" or os.environ.get("PUTIO_OUTPUT_MODE") == "json":
+			pass
+		else:
+			print("Extracting %s...\n" % (path_to_zip_file))
 		zip_ref.extractall(directory_to_extract_to)
 		end_time = current_time()
 		if os.environ.get('PUTIO_REPORT_TIME') is not None:
@@ -206,7 +211,10 @@ def manual_extract(downloader):
 	start_time = current_time()
 	extract = os.system("cd %s && unzip %s" % (directory_to_extract_to, path_to_zip_file))
 	end_time = current_time()
-	print(extract)
+	if os.environ.get("PUTIO_OUTPUT_MODE") == "silent" or os.environ.get("PUTIO_OUTPUT_MODE") == "progress":
+		pass
+	else:
+		print(extract)
 	if os.environ.get('PUTIO_REPORT_TIME') is not None:
 		timed = end_time - start_time, " seconds."
 		report['download_time'] = "%s seconds." % (str(round(timed[0], 2)))
@@ -237,6 +245,8 @@ def env_handle(args,mode):
 			os.environ['PUTIO_CONFIG_PATH'] = args.config
 		if args.notify is not None:
 			os.environ['PUTIO_NOTIFY'] = args.notify
+		if args.notify is not None:
+			os.environ['PUTIO_OUTPUT_MODE'] = args.output
 	else:
 		if args.username is not None:
 			os.environ['PUTIO_USER'] = ""
@@ -250,6 +260,8 @@ def env_handle(args,mode):
 			os.environ['PUTIO_CONFIG_PATH'] = ""
 		if args.notify is not None:
 			os.environ['PUTIO_NOTIFY'] = ""
+		if args.output is not None:
+			os.environ['PUTIO_OUTPUT_MODE'] = ""
 	return args
 
 
@@ -270,6 +282,8 @@ def main():
     help="Put.io Zip URL")
 	parser.add_argument('-n','--notify',
 	help="Notification via Pushover (Assumes PUSHOVER_USER and PUSHOVER_TOKEN in env)")
+	parser.add_argument('-o', '--output',
+	help="Output format (default, json, silent).")
 	parser.add_argument('-v', '--version', 
     help="pyputio version", action='store_true')
 
@@ -285,7 +299,14 @@ def main():
 			ex = extract(downloader)
 		env_handle(args,"unset")
 	
-		return ex
+		if os.environ.get("PUTIO_OUTPUT_MODE") == "silent":
+			response = ""
+		elif os.environ.get("PUTIO_OUTPUT_MODE") == "progress":
+			response = ""
+		else:
+			response = ex
+
+		return response
 	else:
 		return versionInfo()
 
