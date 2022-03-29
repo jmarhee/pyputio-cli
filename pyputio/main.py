@@ -10,6 +10,7 @@ import requests
 import time
 import random
 from pkg_resources import get_distribution, DistributionNotFound
+from plexapi.myplex import MyPlexAccount
 
 class DlProgressBar():
     def __init__(self):
@@ -44,6 +45,53 @@ def readSubpaths(library_path):
 		break
 	return paths
 
+def plexCredWarning():
+	status = True
+	if os.environ.get('PUTIO_PLEX_UPDATE') is not None:
+		if os.environ.get('PLEX_PASSWORD') is None or os.environ.get('PLEX_USERNAME') is None or os.environ.get('PLEX_SERVER_NAME') is None:
+			print("[WARN] Ensure PLEX_USERNAME, PLEX_PASSWORD, and PLEX_SERVER_NAME are set in environment.")
+			status = False
+	return status
+
+def readPlexCollections():
+	status = plexCredWarning()
+
+	if status == True:
+		plex_auth_info = {
+			"username": os.environ['PLEX_USERNAME'],
+			"password": os.environ['PLEX_PASSWORD'],
+			"server": os.environ['PLEX_SERVER_NAME']
+		}
+
+		account = MyPlexAccount(plex_auth_info['username'], plex_auth_info['password'])
+		plex = account.resource(plex_auth_info['server']).connect()
+
+		collections = plex.library.sections()
+	else:
+		collections = None
+
+	return collections
+
+def plexUpdate():
+	status = plexCredWarning()
+
+	if status == True:
+		plex_auth_info = {
+			"username": os.environ['PLEX_USERNAME'],
+			"password": os.environ['PLEX_PASSWORD'],
+			"server": os.environ['PLEX_SERVER_NAME']
+		}
+
+		account = MyPlexAccount(plex_auth_info['username'], plex_auth_info['password'])
+		plex = account.resource(plex_auth_info['server']).connect()
+		collections = plex.library.update()
+		if os.environ.get("PUTIO_OUTPUT_MODE") != "silent":
+			print("Changes:\n%s\n" % (collections))
+	else:
+		collections = None
+		
+	return collections
+
 def current_time():
 	current = time.time()
 	return current
@@ -66,7 +114,13 @@ def readCredentials():
 
 	if os.environ.get('PUTIO_LIBRARY_SUBPATH') is None:
 		subpaths = readSubpaths(PUTIO_LIBRARY_PATH)
-		PUTIO_LIBRARY_SUBPATH = input("Enter the Plex sub-Library %s to download and unpack to: " % (subpaths))
+		if os.environ.get("PUTIO_PLEX_UPDATE") is not None:
+			collections = readPlexCollections()
+			print("You have PLEX connected to the following Libraries:\n")
+			for c in collections:
+				print(c)
+			print("select the local subpath below for the appropriate Plex library above.\n")
+		PUTIO_LIBRARY_SUBPATH = input("Enter the subdirectory %s to download and unpack to: " % (subpaths))
 	else:
 		PUTIO_LIBRARY_SUBPATH = os.environ['PUTIO_LIBRARY_SUBPATH']
 
@@ -88,7 +142,13 @@ def readConfig():
 		PUTIO_LIBRARY_PATH = parser.get('putio_config', 'library_path')
 	if parser.has_option('putio_config', 'library_subpath') is False:
 		subpaths = readSubpaths(PUTIO_LIBRARY_PATH)
-		PUTIO_LIBRARY_SUBPATH = input("Enter the Plex sub-Library %s to download and unpack to: " % (subpaths))
+		if os.environ.get("PUTIO_PLEX_UPDATE") is not None:
+			collections = readPlexCollections()
+			print("You have PLEX connected to the following Libraries:\n")
+			for c in collections:
+				print(c)
+			print("select the local subpath below for the appropriate Plex library above.\n")
+		PUTIO_LIBRARY_SUBPATH = input("Enter the subdirectory %s to download and unpack to: " % (subpaths))
 	else:
 		PUTIO_LIBRARY_SUBPATH = parser.get('putio_config', 'library_subpath')
 	authentication = {}
@@ -305,6 +365,9 @@ def main():
 			response = ""
 		else:
 			response = ex
+
+		if os.environ.get("PUTIO_PLEX_UPDATE") is not None:
+			plexUpdate()
 
 		return response
 	else:
