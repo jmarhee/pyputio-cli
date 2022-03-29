@@ -1,3 +1,4 @@
+test/
 make-release.py
 __pycache__
 pyputio/__pycache__
@@ -129,3 +130,4 @@ venv.bak/
 .mypy_cache/
 .dmypy.json
 dmypy.json
+plex.py

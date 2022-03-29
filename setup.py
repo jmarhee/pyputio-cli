@@ -1,6 +1,6 @@
 from setuptools import setup
 setup(name='pyputio',
-version='0.1.16',
+version='0.1.17',
 description='Command Line Client for Put.io download zip archives',
 url='https://github.com/jmarhee/pyputio-cli',
 author='jmarhee',
@@ -13,6 +13,7 @@ entry_points = {
 },
 install_requires=[
 	"progressbar",
-	"requests"
+	"requests",
+	"plexapi"
 ],
 zip_safe=False)
