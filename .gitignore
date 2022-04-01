@@ -131,3 +131,4 @@ venv.bak/
 .dmypy.json
 dmypy.json
 plex.py
+ftp.py

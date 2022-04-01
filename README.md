@@ -59,13 +59,26 @@ putio "URL"
 
 using the "Zip and Download" option on the Put.io UI. 
 
-If you wish to delete the zip archive after unarchiving is completed, set `PUTIO_CLEAN` to any value.
+To remove archives after download and extraction, set `PUTIO_CLEAN` to 1. 
 
-Options
+Output Formats
 ---
 
 Output format can be controlled using, either, the `-o` flag, or the `PUTIO_OUTPUT_MODE` environment variable, set to either default, `json` (which returns only a json object about the completed job), `progress` (which returns only the download progress), and `silent` (no output).
 
+Integrations
+---
+
+The following are integrations available for this tool.
+
+### Pushover
+
 If you use [pushover](pushover.net), set `PUSHOVER_TOKEN` and `PUSHOVER_USER` in your environment, and to have completed jobs send a notification, set `--notify` to any value, or `PUTIO_NOTIFY` to any value. 
 
-To remove archives after download and extraction, set `PUTIO_CLEAN` to 1. 
+### Plex Media Server
+
+Using the `PUTIO_PLEX_UPDATE` environment variable (set to anything not `None`), will trigger an update to your library to check for new content after downloading if the target directory from your `putio` run is mapped to a Plex library. Leaving `-s` off of your CLI command, or `library_subpath` unset in your config, or the `PUTIO_LIBRARY_SUBPATH` environment variable unset, at `putio` run time will show you your available Plex libraries, before showing you the local files in your `PUTIO_LIBRARY_PATH` content root. 
+
+This requires that `PLEX_USERNAME`, `PLEX_PASSWORD`, and `PLEX_SERVER_NAME` (the friendly name that shows up in the UI for your server, not the hostname/IP of the server itself) be set in your environment.
+
+If you just want to run an update, without a download, this package also installs `plex-scan`, which does not return anything after requesting the update from the Plex server.
