@@ -11,6 +11,7 @@ import time
 import random
 from pkg_resources import get_distribution, DistributionNotFound
 from plexapi.myplex import MyPlexAccount
+from pyputio.scan import update, notify, plexAuth, plexUpdate, readPlexCollections
 
 class DlProgressBar():
     def __init__(self):
@@ -44,53 +45,6 @@ def readSubpaths(library_path):
 				paths.append(dir)
 		break
 	return paths
-
-def plexCredWarning():
-	status = True
-	if os.environ.get('PUTIO_PLEX_UPDATE') is not None:
-		if os.environ.get('PLEX_PASSWORD') is None or os.environ.get('PLEX_USERNAME') is None or os.environ.get('PLEX_SERVER_NAME') is None:
-			print("[WARN] Ensure PLEX_USERNAME, PLEX_PASSWORD, and PLEX_SERVER_NAME are set in environment.")
-			status = False
-	return status
-
-def readPlexCollections():
-	status = plexCredWarning()
-
-	if status == True:
-		plex_auth_info = {
-			"username": os.environ['PLEX_USERNAME'],
-			"password": os.environ['PLEX_PASSWORD'],
-			"server": os.environ['PLEX_SERVER_NAME']
-		}
-
-		account = MyPlexAccount(plex_auth_info['username'], plex_auth_info['password'])
-		plex = account.resource(plex_auth_info['server']).connect()
-
-		collections = plex.library.sections()
-	else:
-		collections = None
-
-	return collections
-
-def plexUpdate():
-	status = plexCredWarning()
-
-	if status == True:
-		plex_auth_info = {
-			"username": os.environ['PLEX_USERNAME'],
-			"password": os.environ['PLEX_PASSWORD'],
-			"server": os.environ['PLEX_SERVER_NAME']
-		}
-
-		account = MyPlexAccount(plex_auth_info['username'], plex_auth_info['password'])
-		plex = account.resource(plex_auth_info['server']).connect()
-		collections = plex.library.update()
-		if os.environ.get("PUTIO_OUTPUT_MODE") != "silent":
-			print("Changes:\n%s\n" % (collections))
-	else:
-		collections = None
-		
-	return collections
 
 def current_time():
 	current = time.time()
@@ -201,13 +155,6 @@ def do_download(dLurl,credentials):
 	report['library_extract_path'] = "%s/%s" % (credentials['library_path'], credentials['library_subpath'])
 	report['url'] = dLurl['end_url']
 	report['diag'] = download_path
-	if os.environ.get('PUTIO_NOTIFY') is not None:
-		if os.environ.get('PUSHOVER_USER') is None and os.environ.get('PUSHOVER_TOKEN') is None:
-			print("[WARN] Ensure PUSHOVER_TOKEN and PUSHOVER_USER are set in environment.")
-		else:
-			notification_data = "token=%s&user=%s&device=putio-cli&message=%s" % (os.environ['PUSHOVER_TOKEN'], os.environ['PUSHOVER_USER'], report['full_path'])
-			headers = {"Content-type": "application/x-www-form-urlencoded"}
-			notification = requests.post("https://api.pushover.net/1/messages.json", headers=headers, data=notification_data)
 	return report
 
 def manual_do_download(dLurl,credentials):
@@ -262,6 +209,11 @@ def extract(downloader):
                         report['download_time'] = downloader['download_time']
 	report['archive'] = path_to_zip_file
 	report['unpacked_to'] = downloader['library_extract_path']
+	if os.environ.get('PUTIO_NOTIFY') is not None:
+		if os.environ.get('PUSHOVER_USER') is None and os.environ.get('PUSHOVER_TOKEN') is None:
+			print("[WARN] Ensure PUSHOVER_TOKEN and PUSHOVER_USER are set in environment.")
+		else:
+			notify("%s: Extracting..." % (downloader['full_path']))
 	return report
 
 def manual_extract(downloader):
@@ -367,7 +319,9 @@ def main():
 			response = ex
 
 		if os.environ.get("PUTIO_PLEX_UPDATE") is not None:
-			plexUpdate()
+			if os.environ.get("PLEX_USERNAME") is not None and os.environ.get("PLEX_PASSWORD") is not None:
+				if os.environ.get("PLEX_SERVER_NAME") is not None:
+					plexUpdate()
 
 		return response
 	else:
