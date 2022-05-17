@@ -39,7 +39,7 @@ putio --config config.ini --url ""
 ```
 
 or, using the command line flags to set these options credentials:
-
+`
 ```bash
 putio --username "" --password "" --library_path "/mnt/target" --library_subpath "Music" --url ""
 ```
@@ -47,6 +47,7 @@ putio --username "" --password "" --library_path "/mnt/target" --library_subpath
 and set `PUTIO_LIBRARY_SUBPATH`, or reply when prompted. If required values are not set using the above, you will be prompted for them. 
 
 You can set `PUTIO_CLEAN` to any value to have it clean up the zip archives after the download attempt.
+
 
 Usage
 ---
@@ -60,6 +61,21 @@ putio "URL"
 using the "Zip and Download" option on the Put.io UI. 
 
 To remove archives after download and extraction, set `PUTIO_CLEAN` to 1. 
+
+Environment Reference
+---
+
+The following environment variables can be set to assist usage as well. Details on use of options follow in other sections
+
+| Option            | Description                                                                                      | Value                          |
+|-------------------|--------------------------------------------------------------------------------------------------|--------------------------------|
+| PUTIO_CLEAN       | Removes archive after extraction                                                                 | IfPresent                      |
+| PUTIO_DIR_CREATE  | Creates subdirectories if they do not exist in library path                                      | IfPresent                      |
+| PUTIO_REPORT_TIME | Reports download and extract stats and info upon completion                                      | IfPresent                      |
+| PUTIO_MANUAL_DL   | Downloads using shell rather than Python client                                                  | IfPresent                      |
+| PUTIO_OUTPUT_MODE | Download/Extraction Detail verbosity                                                             | progress \|\| silent \|\| json |
+| PUTIO_NOTIFY      | Push notifications (Requires PUSHOVER_TOKEN and PUSHOVER_USER)                                   | IfPresent                      |
+| PUTIO_PLEX_UPDATE | Runs plex content scan upon completion (requires PLEX_SERVER_NAME, PLEX_USERNAME, PLEX_PASSWORD) | IfPresent                      |
 
 Output Formats
 ---

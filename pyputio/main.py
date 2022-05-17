@@ -174,6 +174,10 @@ def manual_do_download(dLurl,credentials):
 
 def download(url):
 	creds = credentials()
+	if os.environ.get("PUTIO_DIR_CREATE") is not None:
+		dl_dir = "%s/%s" % (creds['library_path'], creds['library_subpath'])
+		if not os.path.exists(dl_dir):
+			os.makedirs(dl_dir)
 	# url = sys.argv[1]
 	if "put.io" in url:
 		dl_url = dlUrl(creds,url)
