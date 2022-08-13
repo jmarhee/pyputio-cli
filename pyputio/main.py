@@ -11,7 +11,8 @@ import time
 import random
 from pkg_resources import get_distribution, DistributionNotFound
 from plexapi.myplex import MyPlexAccount
-from pyputio.scan import update, notify, plexAuth, plexUpdate, readPlexCollections
+from pyputio.scan import update, notify, plexUpdate, readPlexCollections
+from pyputio.plex import plexAuth
 
 class DlProgressBar():
     def __init__(self):

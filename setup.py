@@ -1,6 +1,6 @@
 from setuptools import setup
 setup(name='pyputio',
-version='0.1.19',
+version='0.1.20',
 description='Command Line Client for Put.io download zip archives',
 url='https://github.com/jmarhee/pyputio-cli',
 author='jmarhee',
@@ -11,7 +11,8 @@ python_requires='>=3.8',
 entry_points = {
 	'console_scripts': [
 		'putio=pyputio.main:main',
-		'plex-scan=pyputio.scan:main'
+		'plex-scan=pyputio.scan:main',
+		'plex-empty=pyputio.empty:main',
 	]
 },
 install_requires=[
