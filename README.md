@@ -76,6 +76,7 @@ The following environment variables can be set to assist usage as well. Details 
 | PUTIO_OUTPUT_MODE | Download/Extraction Detail verbosity                                                             | progress \|\| silent \|\| json |
 | PUTIO_NOTIFY      | Push notifications (Requires PUSHOVER_TOKEN and PUSHOVER_USER)                                   | IfPresent                      |
 | PUTIO_PLEX_UPDATE | Runs plex content scan upon completion (requires PLEX_SERVER_NAME, PLEX_USERNAME, PLEX_PASSWORD) | IfPresent                      |
+| PUTIO_PLEX_METADATA_REFRESH_HARD | Forces download from the Internet of library metadata                             | IfPresent                      |
 
 Output Formats
 ---
@@ -97,4 +98,8 @@ Using the `PUTIO_PLEX_UPDATE` environment variable (set to anything not `None`),
 
 This requires that `PLEX_USERNAME`, `PLEX_PASSWORD`, and `PLEX_SERVER_NAME` (the friendly name that shows up in the UI for your server, not the hostname/IP of the server itself) be set in your environment.
 
-If you just want to run an update, without a download, this package also installs `plex-scan`, which does not return anything after requesting the update from the Plex server.
+This package also installs the following console scripts to your path:
+
+- `plex-scan`: If you just want to run an update, without a download, this package also installs `plex-scan`, which does not return anything after requesting the update from the Plex server. 
+
+- `plex-empty`: This command will remove movie collections that contain no videos. By default this uses "Movies" as the library to clean, but to provide a customized name, set the `PLEX_PRUNE_EMPTY_COLLECTION` environment variable.
