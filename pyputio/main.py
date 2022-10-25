@@ -9,6 +9,7 @@ import progressbar
 import requests
 import time
 import random
+import json
 from pkg_resources import get_distribution, DistributionNotFound
 from plexapi.myplex import MyPlexAccount
 from pyputio.scan import update, notify, plexUpdate, readPlexCollections
@@ -321,7 +322,10 @@ def main():
 		elif os.environ.get("PUTIO_OUTPUT_MODE") == "progress":
 			response = ""
 		else:
-			response = ex
+			if os.environ.get("PUTIO_OUTPUT_MODE_FMT") == "pprint":
+				response = json.dumps(ex, indent=2)
+			else:
+				response = ex
 
 		if os.environ.get("PUTIO_PLEX_UPDATE") is not None:
 			if os.environ.get("PLEX_USERNAME") is not None and os.environ.get("PLEX_PASSWORD") is not None:
